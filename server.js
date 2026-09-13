@@ -1,26 +1,11 @@
-import dns from "dns";
-dns.setServers(["1.1.1.1", "8.8.8.8"]);
-dns.setDefaultResultOrder("ipv4first");
+// Entrypoint solo para desarrollo local (npm run dev / node server.js).
+// En Vercel, api/index.js es el que se ejecuta como funcion serverless y
+// esta app nunca llama a .listen(): la exportamos desde aca para no
+// duplicar la configuracion en dos lugares.
+import app from "./api/index.js";
 
-import "dotenv/config";
-import express from "express";
-import cors from "cors";
+const PORT = process.env.PORT || 4000;
 
-import testRoutes from "./src/routes/test.routes.js";
-import linkedinRoutes from "./src/routes/linkedin.routes.js";
-import { connectDB } from "./src/config/db.js";
-
-connectDB();
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-app.use("/api/test", testRoutes);
-
-app.use("/linkedin", linkedinRoutes);
-
-app.listen(4000, () => {
-  console.log("Servidor corriendo en puerto 4000");
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
