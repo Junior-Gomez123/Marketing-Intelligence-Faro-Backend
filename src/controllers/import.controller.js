@@ -8,7 +8,7 @@ export const uploadExport = async (req, res) => {
     }
 
     const connectionId = req.body.connectionId || null;
-    const summary = await importLinkedInExport(req.file.buffer, connectionId);
+    const summary = await importLinkedInExport(req.file.buffer, req.customer._id, connectionId);
 
     res.json({ ok: true, summary });
   } catch (error) {
@@ -21,7 +21,7 @@ export const listActivity = async (req, res) => {
   try {
     const { type, from, to, page = 1, limit = 25 } = req.query;
 
-    const filter = {};
+    const filter = { customerId: req.customer._id };
     if (type) filter.type = type;
     if (from || to) {
       filter.occurredAt = {};
@@ -49,12 +49,15 @@ export const listActivity = async (req, res) => {
 
 export const activityStats = async (req, res) => {
   try {
+    const customerId = req.customer._id;
+
     const byType = await LinkedInActivity.aggregate([
+      { $match: { customerId } },
       { $group: { _id: "$type", count: { $sum: 1 } } },
     ]);
 
     const byMonth = await LinkedInActivity.aggregate([
-      { $match: { occurredAt: { $ne: null } } },
+      { $match: { customerId, occurredAt: { $ne: null } } },
       {
         $group: {
           _id: {

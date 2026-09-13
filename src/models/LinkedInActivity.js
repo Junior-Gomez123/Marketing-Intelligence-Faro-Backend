@@ -6,6 +6,13 @@ import mongoose from "mongoose";
 // reacciono o comento en TUS publicaciones (esa data no existe en el archivo oficial).
 const linkedInActivitySchema = new mongoose.Schema(
   {
+    // A que cliente pertenece este registro -- separa los datos de cada cuenta.
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+      required: true,
+    },
+
     connectionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "LinkedInConnection",
@@ -32,12 +39,13 @@ const linkedInActivitySchema = new mongoose.Schema(
     // Fila original tal como vino del CSV, por si el mapeo de columnas no capturo algo.
     raw: { type: mongoose.Schema.Types.Mixed, default: null },
 
-    // Hash de deduplicacion para poder re-importar el mismo export sin duplicar filas.
+    // Hash de deduplicacion (incluye el cliente) para poder re-importar el mismo
+    // export sin duplicar filas, sin que dos clientes distintos se pisen entre si.
     dedupeKey: { type: String, required: true, unique: true },
   },
   { timestamps: true },
 );
 
-linkedInActivitySchema.index({ type: 1, occurredAt: -1 });
+linkedInActivitySchema.index({ customerId: 1, type: 1, occurredAt: -1 });
 
 export default mongoose.model("LinkedInActivity", linkedInActivitySchema);

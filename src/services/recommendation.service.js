@@ -324,12 +324,12 @@ export function buildRecommendations(metrics) {
   };
 }
 
-export async function getRecommendations() {
+export async function getRecommendations(customerId) {
   const [posts, comments, reactions, postMetrics] = await Promise.all([
-    LinkedInActivity.find({ type: "post" }),
-    LinkedInActivity.find({ type: "comment" }),
-    LinkedInActivity.find({ type: "reaction" }),
-    PostMetric.find({}),
+    LinkedInActivity.find({ customerId, type: "post" }),
+    LinkedInActivity.find({ customerId, type: "comment" }),
+    LinkedInActivity.find({ customerId, type: "reaction" }),
+    PostMetric.find({ customerId }),
   ]);
 
   const activityMetrics = computeMetricsFromRecords({ posts, comments, reactions });

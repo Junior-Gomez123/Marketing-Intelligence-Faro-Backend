@@ -13,6 +13,7 @@ export const createPostMetric = async (req, res) => {
     const body = req.body || {};
 
     const doc = {
+      customerId: req.customer._id,
       postLink: body.postLink || "",
       postLabel: body.postLabel || "",
       postDate: body.postDate ? new Date(body.postDate) : null,
@@ -37,7 +38,10 @@ export const createPostMetric = async (req, res) => {
 
 export const listPostMetrics = async (req, res) => {
   try {
-    const items = await PostMetric.find({}).sort({ postDate: -1, createdAt: -1 });
+    const items = await PostMetric.find({ customerId: req.customer._id }).sort({
+      postDate: -1,
+      createdAt: -1,
+    });
     res.json({ items, total: items.length });
   } catch (error) {
     console.error("Error listando metricas de posts:", error);
@@ -47,7 +51,11 @@ export const listPostMetrics = async (req, res) => {
 
 export const deletePostMetric = async (req, res) => {
   try {
-    await PostMetric.findByIdAndDelete(req.params.id);
+    const deleted = await PostMetric.findOneAndDelete({
+      _id: req.params.id,
+      customerId: req.customer._id,
+    });
+    if (!deleted) return res.status(404).json({ error: "Metrica no encontrada" });
     res.json({ ok: true });
   } catch (error) {
     console.error("Error borrando metrica de post:", error);

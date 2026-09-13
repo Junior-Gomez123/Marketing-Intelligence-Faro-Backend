@@ -17,7 +17,12 @@ import express from "express";
 import cors from "cors";
 
 import testRoutes from "./src/routes/test.routes.js";
+import authRoutes from "./src/routes/auth.routes.js";
+import customerRoutes from "./src/routes/customer.routes.js";
+import linkedinDataRoutes from "./src/routes/linkedinData.routes.js";
 import linkedinRoutes from "./src/routes/linkedin.routes.js";
+import { requireAuth } from "./src/middleware/auth.middleware.js";
+import { loadOwnedCustomer } from "./src/controllers/customer.controller.js";
 import { connectDB } from "./src/config/db.js";
 
 const app = express();
@@ -46,7 +51,15 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/test", testRoutes);
+app.use("/auth", authRoutes);
+
+// Conectar LinkedIn (OAuth) -- tema aparte del login de la app, sin cambios.
 app.use("/linkedin", linkedinRoutes);
+
+// Login de la app: cada cuenta administra sus propios clientes (Customer), y
+// todos los datos de LinkedIn cuelgan de un cliente especifico, nunca sueltos.
+app.use("/customers", requireAuth, customerRoutes);
+app.use("/customers/:customerId", requireAuth, loadOwnedCustomer, linkedinDataRoutes);
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => {

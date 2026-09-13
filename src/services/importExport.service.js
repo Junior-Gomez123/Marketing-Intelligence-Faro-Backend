@@ -84,19 +84,22 @@ function normalizeRow(type, row) {
   };
 }
 
-function makeDedupeKey(type, row) {
+// El hash de dedupe incluye el customerId para que dos clientes distintos
+// nunca se pisen entre si aunque importen filas con contenido identico.
+function makeDedupeKey(customerId, type, row) {
   const hash = crypto.createHash("sha1");
-  hash.update(type + "|" + JSON.stringify(row));
+  hash.update(String(customerId) + "|" + type + "|" + JSON.stringify(row));
   return hash.digest("hex");
 }
 
 /**
  * Procesa el ZIP del export de LinkedIn ("Get a copy of your data").
  * @param {Buffer} zipBuffer
+ * @param {string} customerId - a que cliente pertenece este import
  * @param {string|null} connectionId
  * @returns {Promise<object>} resumen del import
  */
-export async function importLinkedInExport(zipBuffer, connectionId = null) {
+export async function importLinkedInExport(zipBuffer, customerId, connectionId = null) {
   const zip = new AdmZip(zipBuffer);
   const entries = zip.getEntries().filter((e) => !e.isDirectory);
 
@@ -144,13 +147,14 @@ export async function importLinkedInExport(zipBuffer, connectionId = null) {
 
     for (const row of rows) {
       const normalized = normalizeRow(type, row);
-      const dedupeKey = makeDedupeKey(type, row);
+      const dedupeKey = makeDedupeKey(customerId, type, row);
 
       bulkOps.push({
         updateOne: {
           filter: { dedupeKey },
           update: {
             $setOnInsert: {
+              customerId,
               connectionId,
               type,
               ...normalized,
