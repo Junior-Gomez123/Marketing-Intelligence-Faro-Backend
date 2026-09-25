@@ -27,6 +27,13 @@ const linkedinConnectionSchema = new mongoose.Schema(
       type: String,
     },
 
+    // Cuando expira el access token (LinkedIn los emite validos ~60 dias).
+    // Pasada esta fecha hay que reconectar -- no pedimos refresh token para
+    // no complicar el flujo.
+    expiresAt: {
+      type: Date,
+    },
+
     permissions: [String],
 
     lastSync: {
@@ -37,5 +44,7 @@ const linkedinConnectionSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+linkedinConnectionSchema.index({ customerId: 1 });
 
 export default mongoose.model("LinkedInConnection", linkedinConnectionSchema);
